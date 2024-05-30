@@ -7,7 +7,6 @@ on:
     branches: [ main ]
 
 jobs:
-
   build:
     name: Build
     runs-on: windows-latest
@@ -16,51 +15,41 @@ jobs:
     - uses: actions/checkout@v3
     
     - name: Setup Build Environment
-      run: | 
-        # Install .NET Core SDK
-        choco install dotnetcore-sdk --version 8.0
-        # Install rust 
-        choco install rustup
-        # Upgrade Rust
-        rustup update
-        # Install Rust wasm-toolchain
-        rustup target add wasm32-wasi
-
-    - name: Install Rust using rustup
       run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o rustup-init.exe
-        rustup-init.exe -y --default-toolchain stable --profile minimal
-        
-    - name: Add Cargo bin to PATH
-      shell: powershell
-      run: echo "::add-path::${{env.USERPROFILE}}\.cargo\bin"
+        # Install .NET Core SDK
+        choco install dotnetcore-sdk --version=8.0
+        # Install rustup
+        choco install rustup -y
+        # Install Visual Studio Build Tools
+        choco install visualstudio2019buildtools -y
 
-    - name: Install wasm32-unknown-unknown toolchain
-      run: rustup target add wasm32-unknown-unknown
-      
+    - name: Install Rust and wasm toolchain
+      run: |
+        # Install Rust
+        rustup-init.exe -y --default-toolchain stable --profile minimal
+        # Add Cargo bin to PATH
+        echo "::add-path::${{env.USERPROFILE}}\\.cargo\\bin"
+        # Install wasm32-unknown-unknown target
+        rustup target add wasm32-unknown-unknown
+
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '8.0' # Specify the .NET Core SDK version you need
-    - name: Download Visual Studio Installer
-      run: |
-        curl -Lo vs_buildtools.exe https://aka.ms/vs/16/release/vs_buildtools.exe
 
-    - name: Install Visual Studio C++ Build Tools
-      run: |
-        vs_buildtools.exe --quiet --wait --norestart --nocache \
-          --add Microsoft.VisualStudio.Workload.VCTools \
-          --add Microsoft.VisualStudio.Component.Windows11SDK.22000 \
-          --includeRecommended \
-          --passive
-     
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
-        
+
     - name: Build Zed IDE
-      # Add steps to build the Zed IDE for Windows
-      
+      run: |
+        # Add your build steps here
+        npm install
+        npm run build
+
     - name: Upload Artifacts
-      # Add steps to upload the built artifacts (executables, installers, etc.)
+      uses: actions/upload-artifact@v3
+      with:
+        name: zed-ide-build
+        path: path/to/your/build/output
