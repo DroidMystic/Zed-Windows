@@ -14,26 +14,28 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
     
-    - name: Setup Build Environment
+    - name: Setup Chocolatey
       run: |
-        # Install .NET Core SDK
-        choco install dotnetcore-sdk --version=8.0 -y
-        # Install rustup
-        choco install rustup -y
-        # Install Visual Studio Build Tools
-        choco install visualstudio2019buildtools -y
+        Set-ExecutionPolicy Bypass -Scope Process -Force; \
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
+        iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-    - name: Install Rust using rustup
+    - name: Install Dependencies
       run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o rustup-init.exe
-        rustup-init.exe -y --default-toolchain stable --profile minimal
+        choco install dotnetcore-sdk --version=8.0 -y
+        choco install visualstudio2019buildtools -y
+        choco install rustup.install -y
+
+    - name: Install and Setup Rust
+      shell: bash
+      run: |
+        rustup update
+        rustup default stable
+        rustup target add wasm32-unknown-unknown
 
     - name: Add Cargo bin to PATH
       shell: powershell
       run: echo "::add-path::${{env.USERPROFILE}}\\.cargo\\bin"
-
-    - name: Install wasm32-unknown-unknown toolchain
-      run: rustup target add wasm32-unknown-unknown
 
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v3
