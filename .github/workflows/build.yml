@@ -46,9 +46,13 @@ jobs:
         # Install dependencies and build the project
         npm install
         npm run build
+        # Clone repo
+        git clone https://github.com/zed-industries/zed
+        # Build
+        cargo run --release
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: zed-ide-build
-        path: path/to/your/build/output
+        path: zed/target/release/zed.exe
