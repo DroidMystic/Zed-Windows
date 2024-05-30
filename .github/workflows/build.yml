@@ -27,9 +27,9 @@ jobs:
         rustup default stable
         rustup target add wasm32-unknown-unknown
 
-    - name: Add Cargo bin to PATH
-      shell: powershell
-      run: echo "::add-path::${{env.USERPROFILE}}\\.cargo\\bin"
+    # - name: Add Cargo bin to PATH
+    #   shell: powershell
+    #   run: echo "::add-path::${{env.USERPROFILE}}\\.cargo\\bin"
 
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v3
