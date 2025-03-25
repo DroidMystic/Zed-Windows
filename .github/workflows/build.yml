@@ -1,4 +1,4 @@
-name: Build Zed IDE
+name: Build and Release Zed IDE
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [ main ]
   workflow_dispatch:
+  release:
+    types: [created]
 
 jobs:
   build:
@@ -32,7 +34,7 @@ jobs:
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '8.0' # Specify the .NET Core SDK version you need
+        dotnet-version: '8.0'
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
@@ -41,18 +43,40 @@ jobs:
 
     - name: Clone and Build Zed IDE
       run: |
-        # Clone repo
         git clone https://github.com/zed-industries/zed
         cd zed
-        # Install npm dependencies
         npm install
-        # Build with npm
         npm run build
-        # Build with Cargo
         cargo build --release
 
-    - name: Upload Artifacts
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: zed-ide-build
         path: zed/target/release/zed.exe
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: windows-latest
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push' || (github.event_name == 'release' && github.event.action == 'created')
+    
+    steps:
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: zed-ide-build
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Zed IDE v${{ github.run_number }}
+        tag_name: v${{ github.run_number }}
+        body: |
+          Automated build of Zed IDE
+          - Build number: ${{ github.run_number }}
+          - Commit: ${{ github.sha }}
+        draft: false
+        prerelease: false
+        files: zed.exe
